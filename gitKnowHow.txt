@@ -1,0 +1,29 @@
+INITIALISING THE GIT REPO
+	$ git init
+
+GIT STATUS CHECK:
+	$ git status
+
+ADDING DATA TO REPO:
+	$ git add .
+
+COMMITING DATA TO REPO:
+	$ git commit -m "Message"
+
+PUSING CODE TO REPO:
+	$ git push -u origin master
+
+ADDING THE REPO TO DIRECTORY:
+	$ git remote add origin <https to repo>
+
+MASKING THE PROXY:
+	$ git config --global http.proxy http://cse1200118:IITINDORE2014@webproxy.indore.iiti.ac.in:8080
+
+PULLING THE UPDATED CODE:
+	$ git pull
+
+PULLING THE CODE AT THE ORIGINAL VERSION:
+	$ git pull --rebase origin master
+
+UNDOING THE CODE TO LOCAL CPOY VERSION:
+	$ git checkout
