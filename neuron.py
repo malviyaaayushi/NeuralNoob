@@ -44,14 +44,14 @@ class NeuralLayer:
 		return opMatrix
 
 class NeuralNetwork:
-	def __init__(self, numLayers, numNeuronsPerLayer, weightMatrix=None, activationFunctions=None):
+	def __init__(self, numLayers, numNeuronsPerLayer, weightMatrix=[], activationFunctions=[]):
 		if len(numNeuronsPerLayer) != numLayers:
 			print("Error: incompitable number of neurons")
 			sys.exit(0)
 		else:
 			self._numNeuronsPerLayer = numNeuronsPerLayer
 		self._numLayers = numLayers-1
-		if weightMatrix==None:
+		if weightMatrix==[]:
 			self._weightMatrix = [[np.matrix([random.uniform(0.0,1.0)]*numNeuronsPerLayer[i-1]) for j in range(numNeuronsPerLayer[i])] for i in range(1, numLayers)] 
 		else:
 			if len(weightMatrix)!=self._numLayers:
@@ -65,12 +65,12 @@ class NeuralNetwork:
 					else:
 						for j in range(numNeuronsPerLayer[i+1]):
 							if len(weightMatrix[i][j])!=numNeuronsPerLayer[i]:
+								print(weightMatrix)
 								print("Error: Insufficient weights provided for neuron "+str(j+1)+" in Layer "+str(i+1))
 								sys.exit(0)
 			self._weightMatrix = weightMatrix
-		self._weightMatrix = [[np.matrix(weightMatrix[i][j]) for j in range(numNeuronsPerLayer[i+1])] for i in range(self._numLayers)]
-		self._weightMatrix = np.matrix(weightMatrix)
-		if activationFunctions==None:
+		self._weightMatrix = [[np.matrix(self._weightMatrix[i][j]) for j in range(numNeuronsPerLayer[i+1])] for i in range(self._numLayers)]
+		if activationFunctions==[]:
 			self._activationFunctions = [Threshold(1) for i in range(self._numLayers)]
 		else:
 			if len(activationFunctions)!=self._numLayers:

@@ -43,17 +43,17 @@ if __name__ == "__main__":
 		print("x\toutput")
 		for x in [0, 1]:
 			print(str(x)+"\t", end='')
-			print(McCullochPitts(len([x]), [-1], 0).forwardPropagation([x]))
+			print(McCullochPitts(1, [-1], 0).forwardPropagation([x]))
 		print("\nAND Gate")
 		print("x1\tx2\toutput")
 		for x1 in [0, 1]:
 			for x2 in [0, 1]:
-				print(str(x1)+"\t"+str(x2)+"\t"+str(McCullochPitts(len([x1, x2]), [1, 1], 2).forwardPropagation([x1, x2])))
+				print(str(x1)+"\t"+str(x2)+"\t"+str(McCullochPitts(2, [1, 1], 2).forwardPropagation([x1, x2])))
 		print("\nOR Gate")
 		print("x1\tx2\toutput")
 		for x1 in [0, 1]:
 			for x2 in [0, 1]:
-				print(str(x1)+"\t"+str(x2)+"\t"+str(McCullochPitts(len([x1, x2]), [0.5, 0.5], 0.5).forwardPropagation([x1, x2])))
+				print(str(x1)+"\t"+str(x2)+"\t"+str(McCullochPitts(2, [0.5, 0.5], 0.5).forwardPropagation([x1, x2])))
 	else:
 		print("Please enter a valid input")
 
