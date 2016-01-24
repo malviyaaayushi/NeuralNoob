@@ -4,36 +4,47 @@ import sys
 import glob
 import os
 
+from sigmoid import *
 import random
 
 import numpy as np
 
 class Neuron:
 	def __init__(self, weights, activationFunction):
-		self._weights = weights
+		self._weights = weights.transpose()
 		self._activationFunction = activationFunction
+	
 	@property
 	def weights(self):
 		return self._weights
 
+	def updateWeights(self, weights):
+		self._weights = weights.transpose()
+
+	def compute(self, ip):
+		aggr = (ip * self._weights)[0]
+		op = self._activationFunction.compute(aggr)
+		return op
+
 class NeuralLayer:
-	def __init__(self, numNeurons, layerInput, neuronWeightsInLayer, activationFunction):
+	def __init__(self, numNeurons, neuronWeightsInLayer, activationFunction):
 		self._numNeurons = numNeurons
-		self._layerInput = layerInput
-		self._layerOutput = None
 		self._activationFunction = activationFunction
-		self._neurons = [Neuron(self._layerInput, self._neuronWeightsInLayer[i], activationFunction) for i in range(numNeurons)]
+		self._neuronWeightsInLayer = neuronWeightsInLayer
+		self._neurons = [Neuron(self._neuronWeightsInLayer[i], self._activationFunction) for i in range(self._numNeurons)]
+
 	@property
 	def numNeurons(self):
 		return self._numNeurons
 
-	@property
-	def layerOutput(self):
-		return self._layerOutput
+	def compute(self, ip):
+		opMatrix = [0.0]*self._numNeurons
+		for j in range(self._numNeurons):
+			opMatrix[j] = self._neurons[j].compute(ip)
+		return opMatrix
 
 class NeuralNetwork:
-	def __init__(self, ipLayer, numLayers, numNeuronsPerLayer, weightMatrix=None, activationFunctions=None):
-		self._ipLayer = ipLayer
+	def __init__(self, numLayers, numNeuronsPerLayer, weightMatrix=None, activationFunctions=None):
 		if len(numNeuronsPerLayer) != numLayers:
 			print("Error: incompitable number of neurons")
 			sys.exit(0)
@@ -41,7 +52,7 @@ class NeuralNetwork:
 			self._numNeuronsPerLayer = numNeuronsPerLayer
 		self._numLayers = numLayers-1
 		if weightMatrix==None:
-			self._weightMatrix = [[[random.uniform(0.0,1.0)]*numNeuronsPerLayer[i-1] for j in range(numNeuronsPerLayer[i])] for i in range(1, numLayers)] 
+			self._weightMatrix = [[np.matrix([random.uniform(0.0,1.0)]*numNeuronsPerLayer[i-1]) for j in range(numNeuronsPerLayer[i])] for i in range(1, numLayers)] 
 		else:
 			if len(weightMatrix)!=self._numLayers:
 				print("Error: Insufficient weights assigned")
@@ -57,6 +68,7 @@ class NeuralNetwork:
 								print("Error: Insufficient weights provided for neuron "+str(j+1)+" in Layer "+str(i+1))
 								sys.exit(0)
 			self._weightMatrix = weightMatrix
+		self._weightMatrix = [[np.matrix(weightMatrix[i][j]) for j in range(numNeuronsPerLayer[i+1])] for i in range(self._numLayers)]
 		self._weightMatrix = np.matrix(weightMatrix)
 		if activationFunctions==None:
 			self._activationFunctions = [Threshold(1) for i in range(self._numLayers)]
@@ -66,21 +78,66 @@ class NeuralNetwork:
 				sys.exit(0)
 			else:
 				self._activationFunctions = activationFunctions
+		self._layers = [NeuralLayer(numNeuronsPerLayer[1], self._weightMatrix[0], self._activationFunctions[0])] + [NeuralLayer(numNeuronsPerLayer[i], self._weightMatrix[i], self._activationFunctions[i]) for i in range(2, numLayers)]
 
-		self._layers = [NeuralLayer(numNeuronsPerLayer[1], ipLayer, self._weightMatrix[0], self._activationFunctions[0])] + [NeuralLayer(numNeuronsPerLayer[i], [None]*numNeuronsPerLayer[i-1], self._weightMatrix[i], self._activationFunctions[i]) for i in range(2, numLayers)]
-
-	def forwardPropagation(self):
-		a = self._ipLayer
-		aMtrx = np.matrix(a)
+	def forwardPropagation(self, ip):
+		aMatrix = np.matrix(ip)
+		activationValues = []
 		for i in range(self._numLayers):
-			opMatrix = list(self._numNeuronsPerLayer[i])
-			for j in range(self._numNeuronsPerLayer[i]):
-				aggr = (aMtrx * self._weightMatrix)[0]
-				opMatrix[j] = self._activationFunctions[i].compute(aggr)
-			aMtrx = opMatrix
-		return aMatrx
+			aMatrix = np.matrix(self._layers[i].compute(aMatrix))
+			activationValues += [aMatrix]
+		return activationValues
 
-	def backPropagation(self):
-		pass
+	def finalOutput(self):
+		activationValues = self.forwardPropagation()
+		return activationValues[self._numLayers-1]
 
-	
+	def dot(self, x, y):
+		lenX = len(x)
+		z = [None]*lenX
+		for i in range(lenX):
+			z[i] = x.item(i) * y.item(i)
+		return np.matrix(z)
+
+	def backPropagation(self, ip, expectedOutput):
+		expectedOutput = np.matrix(expectedOutput)
+		activationValues = self.forwardPropagation()
+		delta = []*self._numLayers
+		activationFunctionDerivative = [None]*self._numLayers
+		for i in range(self._numLayers):
+			if i == 0:
+				tempIp = ip
+			else:
+				tempIp = activationValues[i-1]
+			activationFunctionDerivative[i] += np.matrix([(activationValues[i].item(j)*(1-activationValues[i].item(j))) for j in range(self._numNeuronsPerLayer[i])])
+		# Set delta for output layer, set δ(nl)=−(y−a(nl))∙f′(z(nl))
+		delta[self._numLayers-1] = self.dot((activationValues[self._numLayers-1] - expectedOutput), activationFunctionDerivative[self._numLayers-1])
+		
+		delJ = [None]*self._numLayers
+		# For l=nl−1,nl−2,nl−3,…,2l=nl−1,nl−2,nl−3,…,2, set δ(l)=((W(l))Tδ(l+1))∙f′(z(l))
+		for l in range(self._numLayers-2, 1, -1):
+			delta[l] = self.dot(np.matrix(self._weightMatrix[l]).transpose() * delta[l+1], activationFunctionDerivative[l])
+			# Compute ∇J(W;x,y) = δ(l+1)(a(l))
+			delJ[l] = delta[l+1] * activationValues[l].transpose()
+
+		return np.matrix(delJ)
+
+	def updatedWeight(self, inputs, expectedOutputs, alpha):
+		ipsCnt = len(inputs)
+		delW = [[np.matrix([0]*numNeuronsPerLayer[i-1]) for j in range(numNeuronsPerLayer[i])] for i in range(1, numLayers)]
+		for i in range(ipsCnt):
+			delW.item(i) = delW.item(i) + self.backPropagation(inputs[i], expectedOutputs[i])
+		weightMatrix = [[np.matrix([weightMatrix.item(j)-alpha*(delW.item(j)/m)]*numNeuronsPerLayer[i-1]) for j in range(numNeuronsPerLayer[i])] for i in range(1, numLayers)]
+		self._weightMatrix = weightMatrix
+
+
+
+
+
+
+
+
+
+
+
+

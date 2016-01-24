@@ -9,8 +9,4 @@ class McCullochPitts:
 		self._neuralNetwork = NeuralNetwork(self._ip, 2, [len(self._ip) ,1], [[self._weights]], [self._activationFunction])
 
 	def forwardPropagation(self):
-		return self._neuralNetwork.forwardPropagation()[0]
-		self._neuralNetwork = NeuralNetwork(self._ip, 2, [len(self._ip) ,1], [[self._weights]], self._activationFunction)
-
-	def forwardPropagation(self):
-		return self._neuralNetwork.forwardPropagation()[0]
+		return self._neuralNetwork.finalOutput().item(0)

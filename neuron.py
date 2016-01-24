@@ -4,6 +4,7 @@ import sys
 import glob
 import os
 
+from sigmoid import *
 import random
 
 import numpy as np
@@ -79,18 +80,64 @@ class NeuralNetwork:
 				self._activationFunctions = activationFunctions
 		self._layers = [NeuralLayer(numNeuronsPerLayer[1], self._weightMatrix[0], self._activationFunctions[0])] + [NeuralLayer(numNeuronsPerLayer[i], self._weightMatrix[i], self._activationFunctions[i]) for i in range(2, numLayers)]
 
-	def forwardPropagation(self):
-		a = self._ipLayer
-		aMatrix = np.matrix(a)
+	def forwardPropagation(self, ip):
+		aMatrix = np.matrix(ip)
+		activationValues = []
 		for i in range(self._numLayers):
 			aMatrix = np.matrix(self._layers[i].compute(aMatrix))
-		return aMatrix
+			activationValues += [aMatrix]
+		return activationValues
 
-	def backPropagation(self):
-		pass
+	def finalOutput(self):
+		activationValues = self.forwardPropagation()
+		return activationValues[self._numLayers-1]
 
-	def updatedWeight(self, #iparams, exampleCnt, alpha):
+	def dot(self, x, y):
+		lenX = len(x)
+		z = [None]*lenX
+		for i in range(lenX):
+			z[i] = x.item(i) * y.item(i)
+		return np.matrix(z)
+
+	def backPropagation(self, ip, expectedOutput):
+		expectedOutput = np.matrix(expectedOutput)
+		activationValues = self.forwardPropagation()
+		delta = []*self._numLayers
+		activationFunctionDerivative = [None]*self._numLayers
+		for i in range(self._numLayers):
+			if i == 0:
+				tempIp = ip
+			else:
+				tempIp = activationValues[i-1]
+			activationFunctionDerivative[i] += np.matrix([(activationValues[i].item(j)*(1-activationValues[i].item(j))) for j in range(self._numNeuronsPerLayer[i])])
+		# Set delta for output layer, set δ(nl)=−(y−a(nl))∙f′(z(nl))
+		delta[self._numLayers-1] = self.dot((activationValues[self._numLayers-1] - expectedOutput), activationFunctionDerivative[self._numLayers-1])
+		
+		delJ = [None]*self._numLayers
+		# For l=nl−1,nl−2,nl−3,…,2l=nl−1,nl−2,nl−3,…,2, set δ(l)=((W(l))Tδ(l+1))∙f′(z(l))
+		for l in range(self._numLayers-2, 1, -1):
+			delta[l] = self.dot(np.matrix(self._weightMatrix[l]).transpose() * delta[l+1], activationFunctionDerivative[l])
+			# Compute ∇J(W;x,y) = δ(l+1)(a(l))
+			delJ[l] = delta[l+1] * activationValues[l].transpose()
+
+		return np.matrix(delJ)
+
+	def updatedWeight(self, inputs, expectedOutputs, alpha):
+		ipsCnt = len(inputs)
 		delW = [[np.matrix([0]*numNeuronsPerLayer[i-1]) for j in range(numNeuronsPerLayer[i])] for i in range(1, numLayers)]
-		for i in range(exampleCnt):
-			delW.item(i) = delW.item(i) + backPropagation(iparams)
+		for i in range(ipsCnt):
+			delW.item(i) = delW.item(i) + self.backPropagation(inputs[i], expectedOutputs[i])
 		weightMatrix = [[np.matrix([weightMatrix.item(j)-alpha*(delW.item(j)/m)]*numNeuronsPerLayer[i-1]) for j in range(numNeuronsPerLayer[i])] for i in range(1, numLayers)]
+		self._weightMatrix = weightMatrix
+
+
+
+
+
+
+
+
+
+
+
+
