@@ -34,33 +34,35 @@ class NeuralLayer:
 class NeuralNetwork:
 	def __init__(self, ipLayer, numLayers, numNeuronsPerLayer, weightMatrix=None, activationFunctions=None):
 		self._ipLayer = ipLayer
-		self._numNeuronsPerLayer = numNeuronsPerLayer
 		if len(numNeuronsPerLayer) != numLayers:
-			print("Error: ")
+			print("Error: incompitable number of neurons")
+			sys.exit(0)
+		else:
+			self._numNeuronsPerLayer = numNeuronsPerLayer
 		self._numLayers = numLayers-1
 		if weightMatrix==None:
 			self._weightMatrix = [[[random.uniform(0.0,1.0)]*numNeuronsPerLayer[i-1] for j in range(numNeuronsPerLayer[i])] for i in range(1, numLayers)] 
 		else:
-			if len(weightMatrix)!=numLayers:
-				print("Error: ")
+			if len(weightMatrix)!=self._numLayers:
+				print("Error: Insufficient weights assigned")
 				sys.exit(0)
 			else:
-				for i in range(1, numLayers):
-					if numNeuronsPerLayer[i]!=len(weightMatrix[i]):
-						print("Error: ")
+				for i in range(self._numLayers):
+					if numNeuronsPerLayer[i+1]!=len(weightMatrix[i]):
+						print("Error: Insufficient weights in Layer "+str(i+1))
 						sys.exit(0)
 					else:
-						for j in range(numNeuronsPerLayer[i]):
-							if len(weightMatrix[i][j])!=numNeuronsPerLayer[i-1]:
-								print("Error: ")
+						for j in range(numNeuronsPerLayer[i+1]):
+							if len(weightMatrix[i][j])!=numNeuronsPerLayer[i]:
+								print("Error: Insufficient weights provided for neuron "+str(j+1)+" in Layer "+str(i+1))
 								sys.exit(0)
 			self._weightMatrix = weightMatrix
 		self._weightMatrix = np.matrix(weightMatrix)
-		if activationFunctions==[]:
-			self._activationFunctions = [Threshold() for i in range(numLayers-1)]
+		if activationFunctions==None:
+			self._activationFunctions = [Threshold(1) for i in range(self._numLayers)]
 		else:
-			if len(activationFunctions)!=numLayers-1:
-				print("Error: ")
+			if len(activationFunctions)!=self._numLayers:
+				print("Error: Insufficient Activation Functions provided")
 				sys.exit(0)
 			else:
 				self._activationFunctions = activationFunctions
