@@ -68,11 +68,8 @@ class NeuralNetwork:
 								print("Error: Insufficient weights provided for neuron "+str(j+1)+" in Layer "+str(i+1))
 								sys.exit(0)
 			self._weightMatrix = weightMatrix
-<<<<<<< HEAD
 		self._weightMatrix = [[np.matrix(weightMatrix[i][j]) for j in range(numNeuronsPerLayer[i+1])] for i in range(self._numLayers)]
-=======
 		self._weightMatrix = np.matrix(weightMatrix)
->>>>>>> 69d57b0b5130d950169cd87507a0d3011831ad9f
 		if activationFunctions==None:
 			self._activationFunctions = [Threshold(1) for i in range(self._numLayers)]
 		else:
