@@ -19,9 +19,6 @@ ADDING THE REPO TO DIRECTORY:
 MASKING THE PROXY:
 	$ git config --global http.proxy http://cse1200118:IITINDORE2014@webproxy.indore.iiti.ac.in:8080
 
-UNMASKING THE PROXY:
-	$ git config --global --unset http.proxy
-
 PULLING THE UPDATED CODE:
 	$ git pull
 
