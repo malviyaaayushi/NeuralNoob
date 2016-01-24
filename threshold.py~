@@ -1,6 +1,6 @@
 
 class Threshold:
-	def __init__(self, t):
+	def __init__(t):
 		self._t = t
 	
 	def compute(self, aggr):	
