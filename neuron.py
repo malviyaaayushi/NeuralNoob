@@ -88,8 +88,8 @@ class NeuralNetwork:
 			activationValues += [aMatrix]
 		return activationValues
 
-	def finalOutput(self):
-		activationValues = self.forwardPropagation()
+	def finalOutput(self,ip):
+		activationValues = self.forwardPropagation(ip)
 		return activationValues[self._numLayers-1]
 
 	def dot(self, x, y):
@@ -125,7 +125,7 @@ class NeuralNetwork:
 		ipsCnt = len(inputs)
 		delW = [[np.matrix([0]*self._numNeuronsPerLayer[i-1]) for j in range(self._numNeuronsPerLayer[i])] for i in range(1, self._numLayers)]
 		for i in range(ipsCnt):
-			delW.itemset(i,delW.item(i) + self.backPropagation(inputs[i], expectedOutputs[i]))	
+			delW.itemset(i,(delW.item(i) + self.backPropagation(inputs[i], expectedOutputs[i])))	
 		self._weightMatrix = [[np.matrix([self._weightMatrix.item(j)-alpha*(delW.item(j)/m)]*self._numNeuronsPerLayer[i-1]) for j in range(self._numNeuronsPerLayer[i])] for i in range(1, self._numLayers)]
 
 
