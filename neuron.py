@@ -123,11 +123,10 @@ class NeuralNetwork:
 
 	def updatedWeight(self, inputs, expectedOutputs, alpha):
 		ipsCnt = len(inputs)
-		delW = [[np.matrix([0]*numNeuronsPerLayer[i-1]) for j in range(numNeuronsPerLayer[i])] for i in range(1, numLayers)]
+		delW = [[np.matrix([0]*self._numNeuronsPerLayer[i-1]) for j in range(self._numNeuronsPerLayer[i])] for i in range(1, self._numLayers)]
 		for i in range(ipsCnt):
-			delW.item(i) = delW.item(i) + self.backPropagation(inputs[i], expectedOutputs[i])
-		weightMatrix = [[np.matrix([weightMatrix.item(j)-alpha*(delW.item(j)/m)]*numNeuronsPerLayer[i-1]) for j in range(numNeuronsPerLayer[i])] for i in range(1, numLayers)]
-		self._weightMatrix = weightMatrix
+			delW.itemset(i,delW.item(i) + self.backPropagation(inputs[i], expectedOutputs[i]))	
+		self._weightMatrix = [[np.matrix([self._weightMatrix.item(j)-alpha*(delW.item(j)/m)]*self._numNeuronsPerLayer[i-1]) for j in range(self._numNeuronsPerLayer[i])] for i in range(1, self._numLayers)]
 
 
 
