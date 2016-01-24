@@ -110,14 +110,13 @@ class NeuralNetwork:
 			else:
 				tempIp = activationValues[i-1]
 			activationFunctionDerivative[i] += np.matrix([(activationValues[i].item(j)*(1-activationValues[i].item(j))) for j in range(self._numNeuronsPerLayer[i])])
-		# Set delta for output layer, set δ(nl)=−(y−a(nl))∙f′(z(nl))
+		# Set delta for output layer
 		delta[self._numLayers-1] = self.dot((activationValues[self._numLayers-1] - expectedOutput), activationFunctionDerivative[self._numLayers-1])
 		
 		delJ = [None]*self._numLayers
-		# For l=nl−1,nl−2,nl−3,…,2l=nl−1,nl−2,nl−3,…,2, set δ(l)=((W(l))Tδ(l+1))∙f′(z(l))
+		# set delta for all layers
 		for l in range(self._numLayers-2, 1, -1):
 			delta[l] = self.dot(np.matrix(self._weightMatrix[l]).transpose() * delta[l+1], activationFunctionDerivative[l])
-			# Compute ∇J(W;x,y) = δ(l+1)(a(l))
 			delJ[l] = delta[l+1] * activationValues[l].transpose()
 
 		return np.matrix(delJ)
