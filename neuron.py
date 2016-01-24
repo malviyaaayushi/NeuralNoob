@@ -43,8 +43,7 @@ class NeuralLayer:
 		return opMatrix
 
 class NeuralNetwork:
-	def __init__(self, ipLayer, numLayers, numNeuronsPerLayer, weightMatrix=None, activationFunctions=None):
-		self._ipLayer = ipLayer
+	def __init__(self, numLayers, numNeuronsPerLayer, weightMatrix=None, activationFunctions=None):
 		if len(numNeuronsPerLayer) != numLayers:
 			print("Error: incompitable number of neurons")
 			sys.exit(0)
@@ -52,7 +51,7 @@ class NeuralNetwork:
 			self._numNeuronsPerLayer = numNeuronsPerLayer
 		self._numLayers = numLayers-1
 		if weightMatrix==None:
-			self._weightMatrix = [[[random.uniform(0.0,1.0)]*numNeuronsPerLayer[i-1] for j in range(numNeuronsPerLayer[i])] for i in range(1, numLayers)] 
+			self._weightMatrix = [[np.matrix([random.uniform(0.0,1.0)]*numNeuronsPerLayer[i-1]) for j in range(numNeuronsPerLayer[i])] for i in range(1, numLayers)] 
 		else:
 			if len(weightMatrix)!=self._numLayers:
 				print("Error: Insufficient weights assigned")
@@ -89,3 +88,9 @@ class NeuralNetwork:
 
 	def backPropagation(self):
 		pass
+
+	def updatedWeight(self, #iparams, exampleCnt, alpha):
+		delW = [[np.matrix([0]*numNeuronsPerLayer[i-1]) for j in range(numNeuronsPerLayer[i])] for i in range(1, numLayers)]
+		for i in range(exampleCnt):
+			delW.item(i) = delW.item(i) + backPropagation(iparams)
+		weightMatrix = [[np.matrix([weightMatrix.item(j)-alpha*(delW.item(j)/m)]*numNeuronsPerLayer[i-1]) for j in range(numNeuronsPerLayer[i])] for i in range(1, numLayers)]
