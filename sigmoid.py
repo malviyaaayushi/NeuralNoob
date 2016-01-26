@@ -5,7 +5,8 @@ class Sigmoid:
 		pass
 
 	def derivative(self, x):
-		return self.compute(x) * (1 - self.compute(x))
+		fVal = self.compute(x)
+		return fVal * (1 - fVal)
 	
 	def compute(self, x):
 		return 1 / (1 + math.exp(-x))
