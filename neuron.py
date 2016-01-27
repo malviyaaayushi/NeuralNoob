@@ -107,6 +107,20 @@ class NeuralNetwork:
 			z[i] = x.item(i) * y.item(i)
 		return np.matrix(z)
 
+	def error(self, delta):
+		e = 0.0
+		for i in range(self._numNeuronsPerLayer[self._numLayers]):
+			e += pow(delta.item(i), 2)
+		return e/2
+
+	def updateWeights(self, newWeights):
+		self._weightMatrix = newWeights
+		for i in range(self._numLayers):
+			self._layers[i].updateWeights(self._weightMatrix[i])
+
+		#print("Updated WeightMatrix:")
+		#print(self._weightMatrix)
+
 	def backPropagationUtil(self, expectedOutput, activationValues):
 		delta = [None]*self._numLayers
 		activationFunctionDerivative = [None]*self._numLayers
@@ -126,20 +140,6 @@ class NeuralNetwork:
 			delta[l] = self.dot(aggr, activationFunctionDerivative[l])
 		
 		return delta
-
-	def error(self, delta):
-		e = 0.0
-		for i in range(self._numNeuronsPerLayer[self._numLayers]):
-			e += pow(delta[self._numLayers-1].item(i), 2)
-		return e/2
-
-	def updateWeights(self, newWeights):
-		self._weightMatrix = newWeights
-		for i in range(self._numLayers):
-			self._layers[i].updateWeights(self._weightMatrix[i])
-
-		#print("Updated WeightMatrix:")
-		#print(self._weightMatrix)
 			
 
 	def backPropagationUpdateWeight(self, ip, delta, activationValues):
@@ -186,17 +186,51 @@ class NeuralNetwork:
 			print("Final layer output: "+str(activationValues[self._numLayers-1]))
 			print("Backpropagation performed successfully. Final error: "+str(er))	
 
+	def perceptronLearningUtil(self, expectedOutput, activationValues):
+		# Set delta for output layer
+		delta = expectedOutput - activationValues[self._numLayers-1]		
+		return delta
+			
 
+	def perceptronLearningUpdateWeight(self, ip, delta, activationValues, alpha):
+		delW = [None]*self._numLayers
+		for l in range(self._numLayers):
+			delW[l] = [None]*self._numNeuronsPerLayer[l]
+			if l==0:
+				y = ip
+			else:
+				y = activationValues[l-1]
+			delW[l]=delta*y
 		
+		newWeightMatrix = [[None for j in range(self._numNeuronsPerLayer[i+1])] for i in range(self._numLayers)]
+
+		for j in range(self._numLayers):
+			for k in range(self._numNeuronsPerLayer[j+1]):
+				newWeightMatrix[j][k] = self._weightMatrix[j][k] + alpha*delta*activationValues[i]
+
+		self.updateWeights(newWeightMatrix)
+	
+	
+	def perceptronLearning(self, batchInputs, expectedBatchOutputs, alpha, e):
+		if len(batchInputs)!=len(expectedBatchOutputs):
+			print("Error: Invalid input provided. Size of batchInputs and expectedBatchOutputs differ.")
+			sys.exit(0)
+		ipCount = len(batchInputs)
+		for i in range(ipCount):
+			ip = np.matrix(batchInputs[i])
+			expectedOutput = np.matrix(expectedBatchOutputs[i])
+			activationValues = self.forwardPropagation(ip)
+			
+			delta = self.perceptronLearningUtil(expectedOutput, activationValues)
+
+			er = self.error(delta)
+			while er >= e:
+				self.perceptronLearningUpdateWeight(ip, delta, activationValues, alpha)
+				
+				activationValues = self.forwardPropagation(ip)
+
+				delta = self.perceptronLearningUtil(expectedOutput, activationValues)
+				er = self.error(delta)	
 		
-
-
-
-
-
-
-
-
-
-
-
+			print("Final layer output: "+str(activationValues[self._numLayers-1]))
+			print("Perceptronlearning performed successfully. Final error: "+str(er))
