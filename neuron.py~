@@ -22,6 +22,7 @@ class Neuron:
 		self._weights = weights.transpose()
 
 	def compute(self, ip):
+		#print("ip: "+str(ip)+"\nweights: "+str(self._weights.transpose()))
 		aggr = (ip * self._weights).item(0)
 		op = self._activationFunction.compute(aggr)
 		return op
@@ -57,7 +58,7 @@ class NeuralNetwork:
 			self._numNeuronsPerLayer = numNeuronsPerLayer
 		self._numLayers = numLayers-1
 		if weightMatrix==[]:
-			self._weightMatrix = [[np.matrix([random.uniform(0.0,1.0)]*numNeuronsPerLayer[i-1]) for j in range(numNeuronsPerLayer[i])] for i in range(1, numLayers)] 
+			self._weightMatrix = [[[random.uniform(0.0,1.0) for k in range(self._numNeuronsPerLayer[i])] for j in range(self._numNeuronsPerLayer[i+1])] for i in range(self._numLayers)] 
 		else:
 			if len(weightMatrix)!=self._numLayers:
 				print("Error: Insufficient weights assigned")
@@ -107,20 +108,6 @@ class NeuralNetwork:
 			z[i] = x.item(i) * y.item(i)
 		return np.matrix(z)
 
-	def error(self, delta):
-		e = 0.0
-		for i in range(self._numNeuronsPerLayer[self._numLayers]):
-			e += pow(delta.item(i), 2)
-		return e/2
-
-	def updateWeights(self, newWeights):
-		self._weightMatrix = newWeights
-		for i in range(self._numLayers):
-			self._layers[i].updateWeights(self._weightMatrix[i])
-
-		#print("Updated WeightMatrix:")
-		#print(self._weightMatrix)
-
 	def backPropagationUtil(self, expectedOutput, activationValues):
 		delta = [None]*self._numLayers
 		activationFunctionDerivative = [None]*self._numLayers
@@ -140,7 +127,17 @@ class NeuralNetwork:
 			delta[l] = self.dot(aggr, activationFunctionDerivative[l])
 		
 		return delta
-			
+
+	def rmsError(self, expectedOutput, activationValues):
+		e = 0.0
+		for i in range(self._numNeuronsPerLayer[self._numLayers]):
+			e += pow(expectedOutput[self._numLayers-1].item(i) - activationValues[self._numLayers-1].item(i), 2)
+		return pow(e, 0.5)/2
+
+	def updateWeights(self, newWeights):
+		self._weightMatrix = newWeights
+		for i in range(self._numLayers):
+			self._layers[i].updateWeights(self._weightMatrix[i])			
 
 	def backPropagationUpdateWeight(self, ip, delta, activationValues):
 		delW = [None]*self._numLayers
@@ -166,25 +163,20 @@ class NeuralNetwork:
 			print("Error: Invalid input provided. Size of batchInputs and expectedBatchOutputs differ.")
 			sys.exit(0)
 		ipCount = len(batchInputs)
-		for i in range(ipCount):
-			ip = np.matrix(batchInputs[i])
-			expectedOutput = np.matrix(expectedBatchOutputs[i])
-			activationValues = self.forwardPropagation(ip)
-			
-			delta = self.backPropagationUtil(expectedOutput, activationValues)
-
-			er = self.error(delta)
-			while er >= e:
-
+		run = True
+		while run:
+			run = False
+			for i in range(ipCount):
+				ip = np.matrix(batchInputs[i])
+				expectedOutput = np.matrix(expectedBatchOutputs[i])
+				activationValues = self.forwardPropagation(ip)
+				delta = self.backPropagationUtil(expectedOutput, activationValues)
+				
 				self.backPropagationUpdateWeight(ip, delta, activationValues)
 				
-				activationValues = self.forwardPropagation(ip)
-
-				delta = self.backPropagationUtil(expectedOutput, activationValues)
-				er = self.error(delta)	
-		
-			print("Final layer output: "+str(activationValues[self._numLayers-1]))
-			print("Backpropagation performed successfully. Final error: "+str(er))	
+				er = self.rmsError(expectedOutput, activationValues)
+				if er>e:
+					run = True
 
 	def perceptronLearningUtil(self, expectedOutput, activationValues):
 		# Set delta for output layer
