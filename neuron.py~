@@ -130,9 +130,10 @@ class NeuralNetwork:
 
 	def rmsError(self, expectedOutput, activationValues):
 		e = 0.0
-		for i in range(self._numNeuronsPerLayer[self._numLayers]):
+		iRange = self._numNeuronsPerLayer[self._numLayers]
+		for i in range(iRange):
 			e += pow(expectedOutput[self._numLayers-1].item(i) - activationValues[self._numLayers-1].item(i), 2)
-		return pow(e, 0.5)/2
+		return pow(e/iRange, 0.5)
 
 	def updateWeights(self, newWeights):
 		self._weightMatrix = newWeights
@@ -185,15 +186,7 @@ class NeuralNetwork:
 			
 
 	def perceptronLearningUpdateWeight(self, ip, delta, activationValues, alpha):
-		delW = [None]*self._numLayers
-		for l in range(self._numLayers):
-			delW[l] = [None]*self._numNeuronsPerLayer[l]
-			if l==0:
-				y = ip
-			else:
-				y = activationValues[l-1]
-			delW[l]=delta*y
-		
+		'''
 		newWeightMatrix = [[None for j in range(self._numNeuronsPerLayer[i+1])] for i in range(self._numLayers)]
 
 		for j in range(self._numLayers):
@@ -201,28 +194,25 @@ class NeuralNetwork:
 				newWeightMatrix[j][k] = self._weightMatrix[j][k] + alpha*delta*activationValues[i]
 
 		self.updateWeights(newWeightMatrix)
-	
+		'''
+		pass
 	
 	def perceptronLearning(self, batchInputs, expectedBatchOutputs, alpha, e):
 		if len(batchInputs)!=len(expectedBatchOutputs):
 			print("Error: Invalid input provided. Size of batchInputs and expectedBatchOutputs differ.")
 			sys.exit(0)
 		ipCount = len(batchInputs)
-		for i in range(ipCount):
-			ip = np.matrix(batchInputs[i])
-			expectedOutput = np.matrix(expectedBatchOutputs[i])
-			activationValues = self.forwardPropagation(ip)
-			
-			delta = self.perceptronLearningUtil(expectedOutput, activationValues)
-
-			er = self.error(delta)
-			while er >= e:
+		run = True
+		while run:
+			run = False
+			for i in range(ipCount):
+				ip = np.matrix(batchInputs[i])
+				expectedOutput = np.matrix(expectedBatchOutputs[i])
+				activationValues = self.forwardPropagation(ip)
+				delta = self.perceptronLearningUtil(expectedOutput, activationValues)
+				
 				self.perceptronLearningUpdateWeight(ip, delta, activationValues, alpha)
 				
-				activationValues = self.forwardPropagation(ip)
-
-				delta = self.perceptronLearningUtil(expectedOutput, activationValues)
-				er = self.error(delta)	
-		
-			print("Final layer output: "+str(activationValues[self._numLayers-1]))
-			print("Perceptronlearning performed successfully. Final error: "+str(er))
+				er = self.rmsError(expectedOutput, activationValues)
+				if er>e:
+					run = True
