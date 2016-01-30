@@ -193,16 +193,11 @@ class NeuralNetwork:
 				print("")			
 
 	def perceptronLearningUpdateWeight(self, ip, delta, activationValues, alpha):
-		'''
 		newWeightMatrix = [[None for j in range(self._numNeuronsPerLayer[i+1])] for i in range(self._numLayers)]
-
 		for j in range(self._numLayers):
 			for k in range(self._numNeuronsPerLayer[j+1]):
-				newWeightMatrix[j][k] =self._layers[j].neurons()[k].weights() + alpha*delta*activationValues[i]
-
+				newWeightMatrix[j+1][k] =np.add(self._layers[j+1].neurons()[k].weights(), alpha*delta*activationValues[j].item(k))
 		self.updateWeights(newWeightMatrix)
-		'''
-		pass
 	
 	def perceptronLearning(self, batchInputs, expectedBatchOutputs, alpha, e, verbose):
 		if len(batchInputs)!=len(expectedBatchOutputs):
